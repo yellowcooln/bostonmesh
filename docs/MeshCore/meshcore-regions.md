@@ -6,34 +6,31 @@ sidebar_label: MeshCore Regions
 
 # MeshCore Regions for Repeaters
 
-Region management is for **repeater deployments**.  
-When you deploy a repeater, set the repeater region using the state code for where it is physically installed.
+Region management is for **repeater deployments**. The New England region plan is now stable enough for Boston metro and Eastern Massachusetts repeater operators to begin configuring regions while continuing to allow wildcard (`*`) flood traffic.
 
-Using consistent state-based regions helps with:
+Using consistent regions helps with:
 
 - Keeping flood behavior predictable
 - Making repeater intent clear to other operators
 - Coordinating regional deployment decisions
 
-## State region codes
+## Find the regions for your repeater
 
-Use these region names for Greater Boston Mesh deployments:
+Use the [interactive New England Mesh region map](https://newenglandme.sh/regions/map) to find the region codes for a repeater's GPS location. Click the repeater's location on the map to see which regions should be configured.
 
-- `ma` (Massachusetts)
-- `me` (Maine)
-- `ri` (Rhode Island)
-- `vt` (Vermont)
-- `nh` (New Hampshire)
-- `ct` (Connecticut)
+For an explanation of the map, boundary sources, region status, and repeater commands, see the [New England Mesh region guide](https://newenglandme.sh/regions/).
 
-Also add:
+### Boston metro and Eastern Massachusetts
 
-- `newengland` (regional scope)
-- `us` (national scope)
+Repeaters in Boston metro and Eastern Massachusetts should use:
 
-When deploying a repeater, add `newengland` and `us` at the same time you add the state region.
+- `bos` (Boston / Eastern Massachusetts)
+- `northeast` (Northeast region)
+- `east` (East Coast region)
 
-If you are unsure which region to use, ask in Discord or Public mesh chat before finalizing deployment.
+The `bos` boundary is a high-level outline and may receive minor adjustments as deployment needs become clearer. New England's neighboring region plans are also firming up; the broader regions that currently overlap Boston / Eastern Massachusetts are `northeast` and `east`.
+
+If you are outside this area or near a boundary, use the [region map](https://newenglandme.sh/regions/map) rather than assuming a region from the state alone.
 
 ## How scope forwarding works
 
@@ -48,16 +45,20 @@ Important caveat: every repeater on the path must have the same region configure
 
 Example:
 
-- If someone in Boston sends with `ma` scope to Providence, all repeaters on that route need `ma`.
-- If they send with `ri` scope, all repeaters on that route need `ri`.
+- If someone sends on a channel with `bos` scope, every repeater along the route needs `bos` configured and allowed.
+- Traffic scoped to `northeast` or `east` can only continue along paths whose repeaters have the matching region configured and allowed.
 
 ## Rollout note for flood permissions
 
-Do not deny flood on `*` yet.
+Continue to allow flood traffic on `*` for now. Do not disable wildcard flooding when adding the new regions.
 
-We need all deployed repeaters on compatible versions before changing global flood behavior, and that upgrade process may take time as nodes are updated across different locations.
+As region adoption increases, operators may begin disabling wildcard flooding or reducing hop counts for unscoped floods. That transition is expected to happen gradually over the coming weeks or months rather than immediately.
 
-We can start adding and organizing regions now, then apply stricter flood-permission behavior once the network is fully updated.
+Optionally, an operator can restrict unscoped flood packets to a suggested maximum of 12 hops:
+
+```
+set flood.max.unscoped 12
+```
 
 These settings can be changed remotely over the mesh after a repeater is deployed.
 
@@ -70,47 +71,46 @@ These settings can be changed remotely over the mesh after a repeater is deploye
 5. Select `Manage Regions`.
 6. Click the add button at the top right.
    ![Manage Regions screen](./assets/region-1.png)
-7. Enter in `ma` and click the check mark at the top right. Repeat this to also add `newengland` and `us`.
-   ![Add region button](./assets/region-2.png)
-8. Click the 3 dots next to `ma` and select `Allow Flood`. Do the same for `newengland` and `us`.
-   ![Enter ma region](./assets/region-3.png)
+7. Enter `bos` and click the check mark at the top right. Repeat this to add `northeast` and `east`.
+8. Click the 3 dots next to `bos` and select `Allow Flood`. Do the same for `northeast` and `east`. Keep flood allowed for `*`.
 9. Click the check box to confirm region settings.
-   ![Confirm region settings](./assets/region-4.png)
 
 ## How to set allowed regions (CLI)
 
-Use this sequence on a repeater serial CLI to create/update and allow one region (`ma` shown here), then repeat the same steps for `us` and `newengland`.
+For an Eastern Massachusetts or Boston repeater, run:
 
 ```
-region put ma *
-```
-Creates (or updates) the `ma` region under global scope.
+region put bos
+region put northeast
+region put east
 
-```
-region allowf ma
-```
-Enables flood permission for `ma`.
+region allowf bos
+region allowf northeast
+region allowf east
 
-Repeat the same two commands for each additional region you want to allow (for example: `us`, `newengland`).
-
-```
 region save
 ```
-Saves region definitions and permissions to storage.
+
+Keep wildcard flooding enabled during the rollout. If `*` is not already allowed, run:
+
+```
+region allowf *
+region save
+```
 
 Optional verification:
 
 ```
-region get ma
-```
-Checks the `ma` region entry.
-
-Repeat verification for each added region (for example: `region get us`, `region get newengland`).
-
-```
 region list allowed
 ```
-Confirms your added regions appear in the allowed list.
+
+Confirm that `bos`, `northeast`, `east`, and `*` appear in the allowed list.
+
+## Questions and coordination
+
+- Ask local questions in the [Greater Boston Mesh Discord channel](https://discord.com/channels/1380981251200254107/1399550558523887616).
+- Follow broader regional coordination in the [New England Mesh Discord channel](https://discord.com/channels/1515187762771263598/1515207194457673808).
+- Check the [interactive New England Mesh region map](https://newenglandme.sh/regions/map) before configuring a repeater, especially near a boundary.
 
 For the full region command list, see the official MeshCore CLI reference:
-https://github.com/meshcore-dev/MeshCore/wiki/Repeater-&-Room-Server-CLI-Reference#region-management-repeater-only
+[https://docs.meshcore.io/cli_commands/](https://docs.meshcore.io/cli_commands/)
